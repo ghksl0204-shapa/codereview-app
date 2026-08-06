@@ -73,11 +73,18 @@ public class AIReviewService {
         }
     }
 
+    // 주의: 이 메서드는 handleAIReviewRequested -> generateReview -> markCompleted 처럼
+    // 같은 클래스 내부에서 this.markCompleted(...) 형태로 호출된다(self-invocation).
+    // 이 경우 Spring AOP 프록시를 거치지 않아 클래스에 붙은 @Transactional이 무시되고,
+    // findById로 조회한 엔티티가 곧바로 detached 상태가 되어 complete()로 값만 바꿔도
+    // DB에는 반영되지 않는다. 그래서 트랜잭션 유무와 무관하게 항상 반영되도록
+    // aiReviewRepository.save(...)를 명시적으로 호출한다(detached 엔티티는 merge된다).
     @Transactional
     public void markCompleted(Long aiReviewId, String content, String model) {
         AIReview aiReview = aiReviewRepository.findById(aiReviewId)
                 .orElseThrow(() -> new IllegalStateException("AIReview를 찾을 수 없습니다: " + aiReviewId));
         aiReview.complete(content, model);
+        aiReviewRepository.save(aiReview);
     }
 
     @Transactional
@@ -85,6 +92,7 @@ public class AIReviewService {
         AIReview aiReview = aiReviewRepository.findById(aiReviewId)
                 .orElseThrow(() -> new IllegalStateException("AIReview를 찾을 수 없습니다: " + aiReviewId));
         aiReview.fail();
+        aiReviewRepository.save(aiReview);
     }
 
     private void validateOwner(Post post, String memberId) {

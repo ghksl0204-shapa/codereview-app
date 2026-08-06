@@ -45,6 +45,28 @@ export default function PostDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
+  // AI 리뷰가 PENDING인 동안 3초 간격으로 다시 조회해서 COMPLETED/FAILED로 바뀐 것을 반영한다.
+  // 상태가 더 이상 PENDING이 아니게 되면(post?.aiReviewStatus 변경) 이 effect가 재실행되며
+  // 조건에 걸려 인터벌을 새로 걸지 않고, cleanup에서 이전 인터벌은 정리된다.
+  useEffect(() => {
+    if (!post || post.aiReviewStatus !== 'PENDING') return;
+
+    let ignore = false;
+    const intervalId = setInterval(async () => {
+      try {
+        const { data } = await postApi.getDetail(postId);
+        if (!ignore) setPost(data.data);
+      } catch (error) {
+        // 폴링 중 일시적인 에러는 무시하고 다음 주기에 다시 시도한다.
+      }
+    }, 3000);
+
+    return () => {
+      ignore = true;
+      clearInterval(intervalId);
+    };
+  }, [postId, post?.aiReviewStatus]);
+
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -115,8 +137,3 @@ export default function PostDetailPage() {
         danger
         loading={deleting}
         onConfirm={handleDelete}
-        onCancel={() => setConfirmDelete(false)}
-      />
-    </div>
-  );
-}
