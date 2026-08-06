@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-bg: #0b0e14;
+  --color-surface: #131722;
+  --color-surface-2: #171c28;
+  --color-border: #232939;
+  --color-border-soft: #1b202d;
+
+  /* Text */
+  --color-text: #e4e7ed;
+  --color-text-muted: #8b93a7;
+  --color-text-faint: #565e70;
+
+  /* Brand accents (2~3 main colors, no gradients) */
+  --color-primary: #5b8def;
+  --color-primary-hover: #78a2f2;
+  --color-primary-soft: #5b8def1a;
+
+  --color-mint: #3ddc97;
+  --color-mint-soft: #3ddc971a;
+
+  --color-amber: #f2a93c;
+  --color-amber-soft: #f2a93c1a;
+
+  --color-danger: #ef5b5b;
+  --color-danger-soft: #ef5b5b1a;
+
+  /* Type */
+  --font-display: "Space Grotesk", "Pretendard", system-ui, sans-serif;
+  --font-sans: "Inter", "Pretendard", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  scrollbar-color: var(--color-border) var(--color-bg);
+  scrollbar-width: thin;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Monaco editor container needs an explicit height context */
+.monaco-shell {
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}

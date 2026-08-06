@@ -1,0 +1,39 @@
+# ==== 공통: 어느 경로에 있든 다 무시 ====
+**/.gradle/
+**/build/
+**/bin/
+**/.idea/
+**/.vscode/
+**/.metadata/
+**/.classpath
+**/.factorypath
+**/.project
+**/.settings/
+**/.springBeans
+**/.sts4-cache
+**/.apt_generated
+**/*.iws
+**/*.iml
+**/*.ipr
+**/*.pem
+**/*.log
+**/.DS_Store
+**/node_modules/
+**/dist/
+
+# yml(민감정보 가능성) 전체 차단, 워크플로우만 예외
+**/*.yml
+!.github/workflows/*.yml
+!.github/workflows/*.yaml
+
+# jar 전체 차단, gradle wrapper jar만 예외
+**/*.jar
+!codereview-api/codereview/gradle/wrapper/gradle-wrapper.jar
+
+# 프론트 env
+codereview-web/codereview/.env
+codereview-web/codereview/.env.local
+codereview-web/codereview/.env.production
+
+# dep 폴더는 EC2로 수동/스크립트 전송용 임시 자료라 통째로 git 관리 밖에 둠
+codereview-dep/
