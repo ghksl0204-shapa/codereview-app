@@ -137,3 +137,8 @@ export default function PostDetailPage() {
         danger
         loading={deleting}
         onConfirm={handleDelete}
+        onCancel={() => setConfirmDelete(false)}
+      />
+    </div>
+  );
+}
