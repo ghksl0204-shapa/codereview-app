@@ -3,7 +3,7 @@ package com.kh.codereview.rating.model.dto;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -16,5 +16,5 @@ public class RatingResponseDto {
     private Integer accuracyScore;
     private Integer detailScore;
     private String commentText;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 }

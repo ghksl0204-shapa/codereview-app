@@ -4,6 +4,7 @@ import com.kh.codereview.comment.model.dao.CommentRepository;
 import com.kh.codereview.comment.model.vo.Comment;
 import com.kh.codereview.comment.model.vo.CommentStatus;
 import com.kh.codereview.common.exception.BusinessException;
+import com.kh.codereview.common.util.KstDateTime;
 import com.kh.codereview.member.model.service.MemberFinder;
 import com.kh.codereview.member.model.vo.Member;
 import com.kh.codereview.rating.model.dao.RatingRepository;
@@ -66,7 +67,7 @@ public class RatingService {
                 .accuracyScore(rating.getAccuracyScore())
                 .detailScore(rating.getDetailScore())
                 .commentText(rating.getCommentText())
-                .createdAt(rating.getCreatedAt())
+                .createdAt(KstDateTime.from(rating.getCreatedAt()))
                 .build();
     }
 }

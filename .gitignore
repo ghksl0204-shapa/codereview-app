@@ -20,6 +20,7 @@
 **/.DS_Store
 **/node_modules/
 **/dist/
+**/TASK.md
 
 # yml(민감정보 가능성) 전체 차단, 워크플로우만 예외
 **/*.yml

@@ -1,11 +1,12 @@
 package com.kh.codereview.post.model.dto;
 
 import com.kh.codereview.aireview.model.vo.AIReview;
+import com.kh.codereview.common.util.KstDateTime;
 import com.kh.codereview.post.model.vo.Post;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -20,7 +21,7 @@ public class PostResponseDto {
     private String language;
     private String category;
     private String reviewFocus;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
     private String aiReviewStatus;
     private String aiReviewContent;
 
@@ -35,7 +36,7 @@ public class PostResponseDto {
                 .language(post.getLanguage())
                 .category(post.getCategory())
                 .reviewFocus(post.getReviewFocus())
-                .createdAt(post.getCreatedAt())
+                .createdAt(KstDateTime.from(post.getCreatedAt()))
                 .aiReviewStatus(aiReview != null ? aiReview.getStatus().name() : null)
                 .aiReviewContent(aiReview != null ? aiReview.getContent() : null)
                 .build();

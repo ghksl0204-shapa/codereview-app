@@ -1,10 +1,11 @@
 package com.kh.codereview.comment.model.dto;
 
 import com.kh.codereview.comment.model.vo.Comment;
+import com.kh.codereview.common.util.KstDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Builder
@@ -17,7 +18,7 @@ public class CommentResponseDto {
     private String content;
     private Long parentCommentId;
     private String status;
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     public static CommentResponseDto of(Comment comment) {
         return CommentResponseDto.builder()
@@ -28,7 +29,7 @@ public class CommentResponseDto {
                 .content(comment.isDeleted() ? "삭제된 댓글입니다." : comment.getContent())
                 .parentCommentId(comment.getParentCommentId())
                 .status(comment.getStatus().name())
-                .createdAt(comment.getCreatedAt())
+                .createdAt(KstDateTime.from(comment.getCreatedAt()))
                 .build();
     }
 }
