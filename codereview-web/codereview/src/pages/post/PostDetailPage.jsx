@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { postApi } from '../../api/postApi';
+import { aiReviewApi } from '../../api/aiReviewApi';
 import { extractErrorMessage, useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { formatDate } from '../../utils/formatDate';
@@ -21,6 +22,8 @@ export default function PostDetailPage() {
   const [loading, setLoading] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [regenerateSubmitting, setRegenerateSubmitting] = useState(false);
+  const [lastKnownReview, setLastKnownReview] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -79,10 +82,32 @@ export default function PostDetailPage() {
     }
   };
 
+  const handleRegenerate = async () => {
+    setRegenerateSubmitting(true);
+    try {
+      await aiReviewApi.regenerate(postId);
+      // regenerate 응답 자체엔 새 리뷰 결과가 없으므로(비동기), 상세를 다시 조회해
+      // aiReviewStatus를 PENDING으로 갱신한다 - 이후는 기존 폴링 useEffect가 이어받는다.
+      const { data } = await postApi.getDetail(postId);
+      setPost(data.data);
+    } catch (error) {
+      showToast(extractErrorMessage(error, 'AI 리뷰 재검토 요청에 실패했습니다.'), 'error');
+    } finally {
+      setRegenerateSubmitting(false);
+    }
+  };
+
   if (loading) return <PageSpinner label="게시글 불러오는 중..." />;
   if (!post) return null;
 
   const isOwner = user?.id === post.memberId;
+
+  // 재생성이 시작되면 서버는 새 PENDING row를 "최신"으로 응답하므로 aiReviewContent가
+  // 즉시 null로 바뀐다. 직전에 완료됐던 내용을 렌더 중에 파생시켜 들고 있다가, 재생성
+  // 중/실패 시에도 화면에서 보여주기 위한 캐시다 (React가 권장하는 "이전 렌더값 저장" 패턴).
+  if (post.aiReviewContent && post.aiReviewContent !== lastKnownReview) {
+    setLastKnownReview(post.aiReviewContent);
+  }
 
   return (
     <div className="flex flex-col gap-8">
@@ -126,7 +151,14 @@ export default function PostDetailPage() {
 
       <CodeViewer code={post.codeContent} language={post.language} />
 
-      <AIReviewPanel status={post.aiReviewStatus} content={post.aiReviewContent} />
+      <AIReviewPanel
+        status={post.aiReviewStatus}
+        content={post.aiReviewContent}
+        previousContent={lastKnownReview}
+        isOwner={isOwner}
+        regenerating={regenerateSubmitting}
+        onRegenerate={handleRegenerate}
+      />
 
       <CommentList postId={post.id} />
 
