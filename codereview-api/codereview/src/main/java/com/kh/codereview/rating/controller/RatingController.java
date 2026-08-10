@@ -4,6 +4,7 @@ import com.kh.codereview.common.response.ApiResponse;
 import com.kh.codereview.common.security.userdetails.CustomUserDetails;
 import com.kh.codereview.rating.model.dto.RatingCreateRequestDto;
 import com.kh.codereview.rating.model.dto.RatingResponseDto;
+import com.kh.codereview.rating.model.dto.RatingUpdateRequestDto;
 import com.kh.codereview.rating.model.service.RatingService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,5 +30,17 @@ public class RatingController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("별점이 등록되었습니다.", result));
+    }
+
+    @PatchMapping("/{commentId}/rating")
+    public ResponseEntity<ApiResponse<RatingResponseDto>> updateRating(
+            @PathVariable Long commentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @RequestBody RatingUpdateRequestDto requestDto) {
+
+        RatingResponseDto result = ratingService.updateRating(commentId, userDetails.getMemberId(), requestDto);
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("평점이 수정되었습니다.", result));
     }
 }

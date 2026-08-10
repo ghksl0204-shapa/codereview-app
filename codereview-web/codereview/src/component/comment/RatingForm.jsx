@@ -9,9 +9,13 @@ const CRITERIA = [
   { key: 'detailScore', label: '상세도' },
 ];
 
-export default function RatingForm({ onSubmit, onCancel, loading }) {
-  const [scores, setScores] = useState({ kindnessScore: 0, accuracyScore: 0, detailScore: 0 });
-  const [commentText, setCommentText] = useState('');
+export default function RatingForm({ initialValues, submitLabel = '평점 등록', onSubmit, onCancel, loading }) {
+  const [scores, setScores] = useState({
+    kindnessScore: initialValues?.kindnessScore ?? 0,
+    accuracyScore: initialValues?.accuracyScore ?? 0,
+    detailScore: initialValues?.detailScore ?? 0,
+  });
+  const [commentText, setCommentText] = useState(initialValues?.commentText ?? '');
   const [error, setError] = useState('');
 
   const handleSubmit = (e) => {
@@ -53,7 +57,7 @@ export default function RatingForm({ onSubmit, onCancel, loading }) {
           취소
         </Button>
         <Button type="submit" size="sm" loading={loading}>
-          평점 등록
+          {submitLabel}
         </Button>
       </div>
     </form>

@@ -64,4 +64,11 @@ public class Rating {
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
     }
+
+    public void update(Integer kindnessScore, Integer accuracyScore, Integer detailScore, String commentText) {
+        this.kindnessScore = kindnessScore;
+        this.accuracyScore = accuracyScore;
+        this.detailScore = detailScore;
+        this.commentText = commentText;
+    }
 }

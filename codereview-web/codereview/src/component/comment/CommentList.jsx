@@ -93,6 +93,7 @@ export default function CommentList({ postId }) {
               onReply={handleReply}
               onUpdate={handleUpdate}
               onDelete={handleDelete}
+              onRatingChanged={fetchComments}
             />
           ))}
         </div>

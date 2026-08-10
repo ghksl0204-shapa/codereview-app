@@ -36,9 +36,11 @@ public class CommentController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponseDto<CommentResponseDto>>> getComments(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Validated CommentListRequestDto condition) {
 
-        PageResponseDto<CommentResponseDto> response = commentService.getComments(condition);
+        PageResponseDto<CommentResponseDto> response =
+                commentService.getComments(condition, userDetails.getMemberId());
         return ResponseEntity.ok(ApiResponse.success("댓글 목록 조회 성공", response));
     }
 

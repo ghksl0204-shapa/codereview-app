@@ -13,11 +13,14 @@ import com.kh.codereview.member.model.service.MemberFinder;
 import com.kh.codereview.member.model.vo.Member;
 import com.kh.codereview.post.model.service.PostFinder;
 import com.kh.codereview.post.model.vo.Post;
+import com.kh.codereview.rating.model.dto.RatingSummaryDto;
+import com.kh.codereview.rating.model.service.RatingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostFinder postFinder;
     private final MemberFinder memberFinder;
+    private final RatingService ratingService;
 
     @Transactional
     public CommentResponseDto createComment(String memberId, CommentCreateRequestDto requestDto) {
@@ -39,15 +43,19 @@ public class CommentService {
         return CommentResponseDto.of(comment);
     }
 
-    public PageResponseDto<CommentResponseDto> getComments(CommentListRequestDto condition) {
+    public PageResponseDto<CommentResponseDto> getComments(CommentListRequestDto condition, String memberId) {
         postFinder.getActivePost(condition.getPostId());
 
         List<Comment> comments = commentRepository.searchComments(
                 condition.getPostId(), condition.getOffset(), condition.getLimit());
         long totalCount = commentRepository.countComments(condition.getPostId());
 
+        List<Long> commentIds = comments.stream().map(Comment::getId).toList();
+        Map<Long, RatingSummaryDto> ratingSummaries = ratingService.getSummariesByCommentIds(commentIds, memberId);
+
         List<CommentResponseDto> items = comments.stream()
-                .map(CommentResponseDto::of)
+                .map(comment -> CommentResponseDto.of(
+                        comment, ratingSummaries.getOrDefault(comment.getId(), RatingSummaryDto.empty())))
                 .toList();
 
         return PageResponseDto.of(items, condition.getOffset(), condition.getLimit(), totalCount);

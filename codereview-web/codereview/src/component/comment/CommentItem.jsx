@@ -7,7 +7,7 @@ import Button from '../common/Button';
 import Textarea from '../common/Textarea';
 import ConfirmDialog from '../common/ConfirmDialog';
 
-export default function CommentItem({ comment, onReply, onUpdate, onDelete }) {
+export default function CommentItem({ comment, onReply, onUpdate, onDelete, onRatingChanged }) {
   const { user } = useAuth();
   const isOwner = user?.id === comment.memberId;
   const isDeleted = comment.status === 'DELETED';
@@ -113,7 +113,9 @@ export default function CommentItem({ comment, onReply, onUpdate, onDelete }) {
           </div>
         )}
 
-        {!isDeleted && <RatingPanel commentId={comment.id} />}
+        {!isDeleted && (
+          <RatingPanel commentId={comment.id} rating={comment.rating} onChanged={onRatingChanged} />
+        )}
 
         {replying && (
           <div className="mt-3">
