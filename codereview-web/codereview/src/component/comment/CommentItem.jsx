@@ -77,7 +77,7 @@ export default function CommentItem({ comment, onReply, onUpdate, onDelete, onRa
           </div>
         ) : (
           <p
-            className={`mt-2 whitespace-pre-wrap text-sm leading-relaxed ${
+            className={`mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed ${
               isDeleted ? 'italic text-text-faint' : 'text-text'
             }`}
           >

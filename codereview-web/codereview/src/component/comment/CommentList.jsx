@@ -73,7 +73,7 @@ export default function CommentList({ postId }) {
   };
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex min-w-0 flex-col gap-4">
       <h2 className="font-display text-base font-medium text-text">
         댓글 {comments.length > 0 && `(${comments.length})`}
       </h2>
@@ -85,7 +85,7 @@ export default function CommentList({ postId }) {
       ) : comments.length === 0 ? (
         <EmptyState title="아직 댓글이 없습니다" description="가장 먼저 의견을 남겨보세요." />
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex min-w-0 flex-col gap-3">
           {comments.map((comment) => (
             <CommentItem
               key={comment.id}

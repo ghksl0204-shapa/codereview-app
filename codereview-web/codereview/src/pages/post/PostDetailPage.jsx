@@ -110,7 +110,7 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex min-w-0 flex-col gap-8">
       <div>
         <div className="flex items-center gap-2">
           <span className="rounded-md bg-primary-soft px-2 py-0.5 font-mono text-[11px] text-primary">
@@ -122,7 +122,9 @@ export default function PostDetailPage() {
         </div>
 
         <div className="mt-3 flex items-start justify-between gap-4">
-          <h1 className="font-display text-2xl font-semibold text-text">{post.title}</h1>
+          <h1 className="min-w-0 break-words font-display text-2xl font-semibold text-text">
+            {post.title}
+          </h1>
           {isOwner && (
             <div className="flex shrink-0 gap-2">
               <Button as={Link} to={`/posts/${post.id}/edit`} variant="ghost" size="sm">
@@ -141,9 +143,11 @@ export default function PostDetailPage() {
           <span>{formatDate(post.createdAt)}</span>
         </div>
 
-        {post.summary && <p className="mt-4 text-sm leading-relaxed text-text-muted">{post.summary}</p>}
+        {post.summary && (
+          <p className="mt-4 break-words text-sm leading-relaxed text-text-muted">{post.summary}</p>
+        )}
         {post.reviewFocus && (
-          <p className="mt-2 rounded-lg border border-border-soft bg-surface-2 px-3 py-2 text-xs text-text-muted">
+          <p className="mt-2 break-words rounded-lg border border-border-soft bg-surface-2 px-3 py-2 text-xs text-text-muted">
             리뷰 포커스: {post.reviewFocus}
           </p>
         )}
