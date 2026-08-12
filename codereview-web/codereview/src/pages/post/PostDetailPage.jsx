@@ -85,9 +85,13 @@ export default function PostDetailPage() {
   const handleRegenerate = async () => {
     setRegenerateSubmitting(true);
     try {
-      await aiReviewApi.regenerate(postId);
-      // regenerate 응답 자체엔 새 리뷰 결과가 없으므로(비동기), 상세를 다시 조회해
-      // aiReviewStatus를 PENDING으로 갱신한다 - 이후는 기존 폴링 useEffect가 이어받는다.
+      const { data: regenerateData } = await aiReviewApi.regenerate(postId);
+      // 코드가 바뀌지 않아 서버가 새로 호출하지 않고 기존 리뷰를 그대로 돌려준 경우(status
+      // COMPLETED)는 재검토가 "아무 일도 안 일어난" 것처럼 보이지 않도록 토스트로 알린다.
+      // 신규 생성인 경우(PENDING)엔 메시지 없이 기존 폴링 흐름으로 넘어간다.
+      if (regenerateData.data.status === 'COMPLETED') {
+        showToast(regenerateData.message, 'success');
+      }
       const { data } = await postApi.getDetail(postId);
       setPost(data.data);
     } catch (error) {

@@ -17,10 +17,23 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AIReviewService {
+
+    // 실제 게시글 데이터(27건)를 직접 확인해 정한 값 — 14자 log.info("밥"); 는 통과,
+    // 그 아래 8건(낙서/무의미 텍스트)은 차단되는 경계가 10자였음.
+    private static final int MIN_CODE_LENGTH = 10;
+    // ASCII(코드 포인트 0~127, 개행·탭 포함) 문자 비율. 실제 DB의 경계 사례로 검증:
+    // log.info("밥"); 92.9% 통과 / 이모지 스팸 0% 차단 / 조지아 문자 텍스트 20.7% 차단.
+    // 영어 산문은 ASCII 비율이 높아 이 지표로 못 거른다 — 알려진 사각지대이며, 거부 로그로 사후 확인한다.
+    private static final double MIN_ASCII_RATIO = 0.30;
 
     private final AIReviewRepository aiReviewRepository;
     private final PostFinder postFinder;
@@ -31,13 +44,16 @@ public class AIReviewService {
     // 실제 AI 호출은 커밋 이후 이벤트 리스너(handleAIReviewRequested)에서 비동기로 진행된다.
     // 프론트는 이 사이 GET /api/posts/{postId}를 폴링해서 aiReviewStatus 변화를 확인한다.
     @Transactional
-    public AIReview createPendingReview(Long postId) {
+    public AIReview createPendingReview(Post post) {
+        validateContentEligible(post);
+
         AIReview aiReview = AIReview.builder()
-                .postId(postId)
+                .postId(post.getId())
+                .codeHash(hashOf(post.getCodeContent()))
                 .build();
         AIReview saved = aiReviewRepository.save(aiReview);
 
-        eventPublisher.publishEvent(new AIReviewRequestedEvent(saved.getId(), postId));
+        eventPublisher.publishEvent(new AIReviewRequestedEvent(saved.getId(), post.getId()));
         return saved;
     }
 
@@ -47,8 +63,22 @@ public class AIReviewService {
         validateOwner(post, memberId);
         validateNotAlreadyInProgress(postId);
 
-        AIReview aiReview = createPendingReview(postId);
+        Optional<AIReview> reusable = findReusableReview(post);
+        if (reusable.isPresent()) {
+            return AIReviewResponseDto.of(reusable.get());
+        }
+
+        AIReview aiReview = createPendingReview(post);
         return AIReviewResponseDto.of(aiReview);
+    }
+
+    // 코드 본문이 마지막으로 완료된 리뷰 이후 바뀌지 않았다면, AI를 다시 호출하지 않고
+    // 기존 완료 리뷰를 그대로 재사용한다(비용 방어 조치 3).
+    private Optional<AIReview> findReusableReview(Post post) {
+        String currentHash = hashOf(post.getCodeContent());
+        return aiReviewRepository.findFirstByPostIdOrderByCreatedAtDesc(post.getId())
+                .filter(review -> review.getStatus() == AIReviewStatus.COMPLETED)
+                .filter(review -> currentHash.equals(review.getCodeHash()));
     }
 
     @Async("aiReviewExecutor")
@@ -108,5 +138,41 @@ public class AIReviewService {
                     throw BusinessException.badRequest(
                             "AI_REVIEW_IN_PROGRESS", "이미 AI 리뷰를 생성하고 있습니다. 완료 후 다시 시도해주세요.");
                 });
+    }
+
+    private void validateContentEligible(Post post) {
+        String content = post.getCodeContent();
+        if (content.length() < MIN_CODE_LENGTH) {
+            log.warn("AI 리뷰 거부 - 길이 미달: postId={}, length={}", post.getId(), content.length());
+            throw BusinessException.badRequest(
+                    "CODE_TOO_SHORT", "코드가 너무 짧아 AI 리뷰를 생성할 수 없습니다. 코드 내용을 입력해주세요.");
+        }
+
+        double asciiRatio = asciiRatio(content);
+        if (asciiRatio < MIN_ASCII_RATIO) {
+            log.warn("AI 리뷰 거부 - 코드로 보기 어려움: postId={}, length={}, asciiRatio={}",
+                    post.getId(), content.length(), asciiRatio);
+            throw BusinessException.badRequest(
+                    "NOT_CODE_LIKE", "코드가 아닌 일반 텍스트로 보입니다. 코드를 입력했는지 확인해주세요.");
+        }
+    }
+
+    private double asciiRatio(String content) {
+        long asciiCount = content.chars().filter(c -> c < 128).count();
+        return (double) asciiCount / content.length();
+    }
+
+    private String hashOf(String content) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(content.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (byte b : hash) {
+                hex.append(String.format("%02x", b));
+            }
+            return hex.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 알고리즘을 사용할 수 없습니다.", e);
+        }
     }
 }

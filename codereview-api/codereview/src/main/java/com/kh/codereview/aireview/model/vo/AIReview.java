@@ -32,13 +32,17 @@ public class AIReview {
     @Column(nullable = false, length = 20)
     private AIReviewStatus status;
 
+    @Column(name = "code_hash", length = 64)
+    private String codeHash;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
     @Builder
-    public AIReview(Long postId) {
+    public AIReview(Long postId, String codeHash) {
         this.postId = postId;
+        this.codeHash = codeHash;
         this.status = AIReviewStatus.PENDING;
     }
 

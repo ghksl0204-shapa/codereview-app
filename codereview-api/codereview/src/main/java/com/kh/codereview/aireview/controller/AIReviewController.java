@@ -26,7 +26,14 @@ public class AIReviewController {
 
         AIReviewResponseDto response = aiReviewService.regenerate(userDetails.getMemberId(), postId);
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("AI 리뷰 재생성을 요청했습니다.", response));
+        // 코드가 바뀌지 않아 새로 호출하지 않고 기존 완료된 리뷰를 그대로 반환한 경우,
+        // regenerate()는 이미 COMPLETED 상태인 리뷰를 즉시 돌려준다(신규 생성 시엔 PENDING).
+        boolean reused = "COMPLETED".equals(response.getStatus());
+        HttpStatus status = reused ? HttpStatus.OK : HttpStatus.CREATED;
+        String message = reused
+                ? "코드가 변경되지 않아 기존 리뷰 결과를 반환합니다."
+                : "AI 리뷰 재생성을 요청했습니다.";
+
+        return ResponseEntity.status(status).body(ApiResponse.success(message, response));
     }
 }

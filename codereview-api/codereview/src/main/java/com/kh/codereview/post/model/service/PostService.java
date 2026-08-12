@@ -34,7 +34,7 @@ public class PostService {
         Post post = requestDto.toEntity(member);
         postRepository.save(post);
 
-        AIReview aiReview = aiReviewService.createPendingReview(post.getId());
+        AIReview aiReview = aiReviewService.createPendingReview(post);
         return PostResponseDto.of(post, aiReview);
     }
 
