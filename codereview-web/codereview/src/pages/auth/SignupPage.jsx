@@ -4,25 +4,29 @@ import { memberApi } from '../../api/memberApi';
 import { extractErrorMessage, useToast } from '../../context/ToastContext';
 import Input from '../../component/common/Input';
 import Button from '../../component/common/Button';
+import {
+  VALIDATION_HINTS,
+  VALIDATION_MESSAGES,
+  validateEmail,
+  validateId,
+  validateNickname,
+  validatePassword,
+} from '../../constants/validation';
 
 const INITIAL = { id: '', password: '', passwordConfirm: '', nickname: '', email: '' };
 
+// 규칙 판단은 constants/validation.js에 모여 있다 (서버 DTO와 쌍으로 관리)
 function validate(form) {
   const errors = {};
-  if (form.id.length < 5 || form.id.length > 12) {
-    errors.id = '아이디는 5자 이상 12자 이하로 입력해주세요.';
-  }
-  if (form.password.length < 8 || form.password.length > 20) {
-    errors.password = '비밀번호는 8자 이상 20자 이하로 입력해주세요.';
-  }
-  if (form.passwordConfirm !== form.password) {
-    errors.passwordConfirm = '비밀번호가 일치하지 않습니다.';
-  }
-  if (form.nickname.length < 2 || form.nickname.length > 10) {
-    errors.nickname = '닉네임은 2자 이상 10자 이하로 입력해주세요.';
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
-    errors.email = '올바른 이메일 형식이 아닙니다.';
+  const checks = {
+    id: validateId(form.id),
+    password: validatePassword(form.password),
+    passwordConfirm: form.passwordConfirm !== form.password ? VALIDATION_MESSAGES.passwordConfirm : null,
+    nickname: validateNickname(form.nickname),
+    email: validateEmail(form.email),
+  };
+  for (const [field, message] of Object.entries(checks)) {
+    if (message) errors[field] = message;
   }
   return errors;
 }
@@ -56,6 +60,11 @@ export default function SignupPage() {
       showToast('회원가입이 완료되었습니다. 로그인해주세요.', 'success');
       navigate('/login', { replace: true });
     } catch (error) {
+      // 검증 실패 응답은 data에 {필드명: 메시지} Map이 담겨 온다 → 각 입력칸 아래 인라인으로 표시
+      const fieldErrors = error?.response?.data?.data;
+      if (fieldErrors && typeof fieldErrors === 'object' && Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors);
+      }
       showToast(extractErrorMessage(error, '회원가입에 실패했습니다.'), 'error');
     } finally {
       setLoading(false);
@@ -85,7 +94,7 @@ export default function SignupPage() {
             value={form.id}
             onChange={handleChange}
             error={errors.id}
-            hint="5~12자"
+            hint={VALIDATION_HINTS.id}
             required
           />
           <Input
@@ -96,6 +105,7 @@ export default function SignupPage() {
             value={form.email}
             onChange={handleChange}
             error={errors.email}
+            hint={VALIDATION_HINTS.email}
             required
           />
           <Input
@@ -105,7 +115,7 @@ export default function SignupPage() {
             value={form.nickname}
             onChange={handleChange}
             error={errors.nickname}
-            hint="2~10자"
+            hint={VALIDATION_HINTS.nickname}
             required
           />
           <Input
@@ -116,7 +126,7 @@ export default function SignupPage() {
             value={form.password}
             onChange={handleChange}
             error={errors.password}
-            hint="8~20자"
+            hint={VALIDATION_HINTS.password}
             required
           />
           <Input

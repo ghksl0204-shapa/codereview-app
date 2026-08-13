@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import Input from '../../component/common/Input';
 import Button from '../../component/common/Button';
 import ConfirmDialog from '../../component/common/ConfirmDialog';
+import { VALIDATION_HINTS, validateNickname, validatePassword } from '../../constants/validation';
 
 export default function MyPage() {
   const { user, updateNickname, logout } = useAuth();
@@ -24,8 +25,9 @@ export default function MyPage() {
 
   const handleNicknameSubmit = async (e) => {
     e.preventDefault();
-    if (nickname.length < 2 || nickname.length > 10) {
-      showToast('닉네임은 2자 이상 10자 이하로 입력해주세요.', 'error');
+    const nicknameError = validateNickname(nickname);
+    if (nicknameError) {
+      showToast(nicknameError, 'error');
       return;
     }
     setNicknameLoading(true);
@@ -42,8 +44,9 @@ export default function MyPage() {
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
-    if (passwordForm.newPassword.length < 8 || passwordForm.newPassword.length > 20) {
-      showToast('새 비밀번호는 8자 이상 20자 이하로 입력해주세요.', 'error');
+    const passwordError = validatePassword(passwordForm.newPassword, '새 비밀번호');
+    if (passwordError) {
+      showToast(passwordError, 'error');
       return;
     }
     setPasswordLoading(true);
@@ -83,7 +86,11 @@ export default function MyPage() {
 
       <form onSubmit={handleNicknameSubmit} className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-5">
         <h2 className="font-display text-base font-medium text-text">닉네임 변경</h2>
-        <Input value={nickname} onChange={(e) => setNickname(e.target.value)} hint="2~10자" />
+        <Input
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          hint={VALIDATION_HINTS.nickname}
+        />
         <Button type="submit" size="sm" loading={nicknameLoading} className="self-start">
           변경하기
         </Button>
@@ -102,7 +109,7 @@ export default function MyPage() {
           label="새 비밀번호"
           value={passwordForm.newPassword}
           onChange={(e) => setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))}
-          hint="8~20자"
+          hint={VALIDATION_HINTS.password}
         />
         <Button type="submit" size="sm" loading={passwordLoading} className="self-start">
           변경하기
