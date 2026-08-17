@@ -24,6 +24,7 @@
 **/TASK-**.md
 **/.claude/settings.json
 **/CLAUDE.md
+**/README_SETUP.md
 
 # yml(민감정보 가능성) 전체 차단, 워크플로우만 예외
 **/*.yml
